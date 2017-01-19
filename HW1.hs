@@ -56,9 +56,11 @@ treverse :: Test
 treverse = "reverse" ~: TestList [reverse [3,2,1] ~?= [1,2,3],
                                   reverse [1]     ~?= [1] ]
 
-zap funs args = g 0 funs args where
-  g n xs ys = if n == length funs || n == length args then [] else
-          (xs !! n) (ys !! n) : g (n + 1) xs ys
+zap :: [t -> a] -> [t] -> [a]
+zap funs args =
+    case (funs, args) of
+      (f : fs, ar : ars) -> f ar : zap fs ars
+      _ -> []
 
 tzap :: Test
 tzap = "zap" ~:
@@ -86,7 +88,7 @@ testLists = "testLists" ~: TestList
 intersperse :: a -> [a] -> [a]
 intersperse c l =
   case l of
-    x : [] -> x : []
+    [x] -> [x]
     x : xs -> x : c : intersperse c xs
     _ -> []
 --intersperseAux c l [] where
@@ -243,13 +245,13 @@ ttranspose = "transpose" ~: assertFailure "testcase for transpose"
 -- this problem, even for use as a helper function.
 
 
-concat :: [[a]] -> [a]
-concat = concatAux lst [] where
-  concatAux [] _ = []                   -- Stop when at end of outer lists
-  concatAux (x : xs) acc =
-    case x of
-      elt : elts -> concatAux (elts : xs) (acc : x)
-      _ -> concatAux xs acc               -- Move to next inner list
+-- concat :: [[a]] -> [a]
+-- concat = concatAux lst [] where
+--   concatAux [] _ = []                   -- Stop when at end of outer lists
+--   concatAux (x : xs) acc =
+--     case x of
+--       elt : elts -> concatAux (elts : xs) (acc : x)
+--       _ -> concatAux xs acc               -- Move to next inner list
 
 -- concat lst =
 --   case lst of
