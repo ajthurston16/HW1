@@ -245,21 +245,61 @@ tzip = "zip" ~:
 --
 -- transpose is defined in Data.List
 
-transpose :: [[a]] -> [[a]] 
-transpose lst = transposeAux [] lst
+-- let (x, xs) = transposeSplit lst in... x :
 
-transposeAux :: [[a]] -> [[a]] -> [[a]]
-transposeAux sol lst =
-  case transposeSplit [] [] lst of
-    (x, rest) -> transposeAux x:sol xs
+transpose :: [[a]] -> [[a]]
+transpose lst =
+  case transposeAux lst of
     (_, []) -> []
+    (x, xs) -> x : transpose xs
+
+-- transHead :: [(a, [a])] -> [a]
+-- transHead lst =
+--   case lst of
+--     (x, xs) : rest -> x : transHead rest
+
+-- transTail :: [(a, [a])] -> [a]
+-- transTail lst =
+--   case lst of
+--     (x, xs) : rest -> xs : transTail rest
 
 
-transposeSplit :: [a] -> [[a]] -> [[a]] -> ([a], [[a]])
-transposeSplit first tail lst = 
+transposeAux :: [[a]] -> ([a], [[a]])
+transposeAux lst =
+  (transHead lst, transTail lst)
+
+transHead :: [[a]] -> [a]
+transHead lst =
   case lst of
-    (x : xs) : rest ->  : transposeSplit first:[x] xs:tail rest
+    (x : xs) : rest -> x : transHead rest
     _ -> []
+
+transTail :: [[a]] -> [[a]]
+transTail lst =
+  case lst of
+    (x : xs) : rest -> xs : transTail rest
+    _ -> []
+
+
+
+-- transposeUnzip :: [(a, [a])] -> ([a], [[a]])
+-- transposeUnzip sol lst =
+--   case lst of
+--     (x, xs) : rest ->
+
+
+-- transposeUnzip :: [(a, [a])] -> [[a], [[a]]]
+-- transposeUnzip (x, xs) : rest =
+--   x : transposeUnzip rest, xs : transposeUnzip
+
+-- transposeSplit :: [[a]] -> [(a, [a])]
+-- transposeSplit lst =
+--   case lst of
+--     (x : xs) : rest ->  (x, xs) : transposeSplit rest
+--     _ -> []
+
+
+
 
 --transpose :: [[a]] -> [[a]]
 --transpose lst = transposeAux lst [] where
@@ -280,7 +320,12 @@ transposeSplit first tail lst =
 
 
 ttranspose :: Test
-ttranspose = "transpose" ~: assertFailure "testcase for transpose"
+ttranspose = "transpose" ~:
+  TestList[ transpose [[1, 2, 3], [4, 5, 6], [7, 8, 9]] ~?= [[1, 4, 7], [2, 5, 8], [3, 6, 9]],
+            transpose [[1, 2, 3], [4, 5]] ~?= [[1, 4], [2, 5]],
+            transpose [[1, 2], [3, 4, 5]] ~?= [[1, 3], [2, 4]],
+            transpose [([] :: [Int])] ~?= [([] :: [Int])]
+  ]
 
 -- concat
 
@@ -322,15 +367,16 @@ mapMaybe :: (a -> Maybe a) -> [a] -> [a]
 
 mapMaybe f lst =
   case lst of
-    x : xs -> if f x  == Nothing then mapMaybe f xs else f x : Map
-              --case f x of
-              --  Just val -> val : mapMaybe f xs
-              --  Nothing -> mapMaybe f xs
+    x : xs -> case f x of
+                Just val -> val : mapMaybe f xs
+                Nothing -> mapMaybe f xs
     _ -> []
 
 tmapMaybe :: Test
 tmapMaybe = "mapMaybe" ~:
-  TestList[ mapMaybe]
+  TestList[ mapMaybe root [0.0, -1.0, 4.0] ~?= [0.0,2.0],
+            mapMaybe root [] ~?= [],
+            mapMaybe root [-1.0, -2.0] ~?= ([] :: [Double])]
 
 -- countSub sub str
 
@@ -339,20 +385,29 @@ tmapMaybe = "mapMaybe" ~:
 -- for example:
 --      countSub "aa" "aaa" returns 2
 
--- countSub :: [Char] -> [Char] -> Int
--- countSub sub [] = 0
--- countSub sub (x : xs)
---   | trimTail str sub == sub = 1 + countSub sub xs
---   | otherwise = countSub sub xs
+countSub :: [Char] -> [Char] -> Int
+countSub [] _ = 0
+countSub _ [] = 0
+countSub sub (x : xs)
+    | strSlice (x : xs) (strLen sub) == sub = (countSub sub xs) + 1
+    | otherwise = countSub sub xs
 
---   where trimTail sub str =
---     case (sub, str) of
---       (x, y : ys) -> y : trimTail x ys
---       _ -> []
+strSlice :: [Char] -> Int -> [Char]
+strSlice [] _ = []
+strSlice (x : xs) i = if i == 0 then [] else x : strSlice xs (i - 1)
 
+strLen :: [Char] -> Int
+strLen [] = 0
+strLen (x : xs) = 1 + strLen xs
 
 tcountSub :: Test
-tcountSub = "countSub" ~: assertFailure "testcase for countSub"
+tcountSub = "countSub" ~:
+  TestList[ countSub "aa" "aaa" ~?= 2,
+            countSub "aa" "ababtsdasqdsdgdaca" ~?= 0,
+            countSub "aaaaa" "aaaaa" ~?= 1,
+            countSub "" "aas" ~?= 0,
+            countSub "aa" "" ~?= 0
+          ]
 
 -- splitBy pred lst
 --
@@ -367,8 +422,19 @@ isSpace :: Char -> Bool
 isSpace ' ' = True
 isSpace  _  = False
 
--- splitBy :: (a -> Bool) -> [a] -> [[a]]
--- splitBy pred lst = splitByAux pred lst [] where
+
+--splitBy :: (a -> Bool) -> [a] -> [[a]]
+splitBy pre lst = splitByAux pre lst [] where
+    -- splitByAux pre lst acc =
+    --   case lst of
+    --     x : xs -> if pre x then acc : splitByAux pre xs []
+    --               else splitByAux pre xs x : acc
+    --     _ ->      acc
+
+     splitByAux pre (x : xs) sub
+       | pre x = sub : splitByAux pre xs []
+       | otherwise = splitByAux pre xs x:sub
+
 --   splitByAux pred [] _ = []
 --   splitByAux pred (x : xs) acc
 --      | pred x = acc : splitByAux pred xs []
