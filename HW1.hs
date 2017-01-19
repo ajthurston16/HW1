@@ -87,21 +87,19 @@ testLists = "testLists" ~: TestList
 -- that one.
 
 intersperse :: a -> [a] -> [a]
-intersperse c l =
-  case l of
+intersperse c lst =
+  case lst of
     [x] -> [x]
     x : xs -> x : c : intersperse c xs
     _ -> []
---intersperseAux c l [] where
---  intersperseAux c l acc =
---    case l of
- --     x : xs -> x : xs
-      --x : xs -> intersperseAux c xs (acc : x : c)
---      _ -> acc : x
 
 
 tintersperse :: Test
-tintersperse = "intersperse" ~: assertFailure "testcase for intersperse"
+tintersperse = "intersperse" ~:
+  TestList[ intersperse ',' "abcde" ~?= "a,b,c,d,e",
+            intersperse ',' "" ~?= "",
+            intersperse ',' "a" ~?= "a"]
+
 
 
 -- invert lst returns a list with each pair reversed.
@@ -113,13 +111,16 @@ tintersperse = "intersperse" ~: assertFailure "testcase for intersperse"
 --
 
 invert :: [(a, b)] -> [(b, a)]
-invert l =
-  case l of
+invert lst =
+  case lst of
     (a, b) : rest -> (b, a) : invert rest
     _ -> []
 
 tinvert :: Test
-tinvert = "invert" ~: assertFailure "testcase for invert"
+tinvert = "invert" ~:
+  TestList[ invert [("a",1),("a",2)] ~?= [(1,"a"),(2,"a")],
+            invert ([] :: [(Int,Char)]) ~?= [],
+            invert [(1, "c")] ~?= [("c", 1)]]
 
 
 -- takeWhile, applied to a predicate p and a list xs,
@@ -133,13 +134,17 @@ tinvert = "invert" ~: assertFailure "testcase for invert"
 -- takeWhile is a Prelude function
 
 takeWhile :: (a -> Bool) -> [a] -> [a]
-takeWhile p l =
-  case l of
+takeWhile p lst =
+  case lst of
     x : xs -> if p x then x : takeWhile p xs else []
     _ -> []
 
 ttakeWhile :: Test
-ttakeWhile = "takeWhile" ~: assertFailure "testcase for takeWhile"
+ttakeWhile = "takeWhile" ~:
+  TestList[ takeWhile (< 3) [1,2,3,4,1,2,3,4] ~?= [1, 2],
+            takeWhile (> -9) [1,2,3] ~?= [1,2,3],
+            takeWhile (< 0) [1,2,3] ~?= [],
+            takeWhile (< 3) [] ~?= []]
 
 
 -- find pred lst returns the first element of the list that
@@ -157,7 +162,10 @@ find pred lst =
     _ -> Nothing
 
 tfind :: Test
-tfind = "find" ~: assertFailure "testcase for find"
+tfind = "find" ~:
+  TestList[ find odd [0,2,3,4] ~?= Just 3,
+            find odd [2, 4, 6] ~?= Nothing,
+            find odd [] ~?= Nothing]
 
 
 -- all pred lst returns False if any element of lst fails to satisfy
@@ -167,14 +175,17 @@ tfind = "find" ~: assertFailure "testcase for find"
 --
 -- all is a prelude function
 all :: (a -> Bool) -> [a] -> Bool
-all pred lst =
-  case lst of
-    x : xs -> if pred x then True && all pred xs else False
-    _ -> True
+all pred [] = True
+all pred (x : xs) = if pred x then all pred xs else False
+
 
 tall :: Test
-tall = "all" ~: assertFailure "testcase for all"
-
+tall = "all" ~:
+  TestList[ all odd [1, 3, 5] ~?= True,
+            all odd [2, 4, 6] ~?= False,
+            all odd [1, 3, 6] ~?= False,
+            all odd [] ~?= True,
+            all even [2] ~?= True]
 
 -- map2 f xs ys returns the list obtained by applying f to
 -- to each pair of corresponding elements of xs and ys. If
@@ -194,7 +205,11 @@ map2 f xLst yLst =
     _ -> []
 
 tmap2 :: Test
-tmap2 = "map2" ~: assertFailure "testcase for map2"
+tmap2 = "map2" ~:
+  TestList[ map2 (+) [1, 2, 3] [4, 5, 6] ~?= [5, 7, 9],
+            map2 (+) [1, 2, 3, 5] [4, 5, 6] ~?= [5, 7, 9],
+            map2 (+) [1, 2, 3] [4, 5, 6, 10] ~?= [5, 7, 9],
+            map2 (+) [1, 2, 3] [] ~?= []]
 
 -- zip takes two lists and returns a list of corresponding pairs. If
 -- one input list is shorter, excess elements of the longer list are
@@ -212,7 +227,11 @@ zip xLst yLst =
      _ -> []
 
 tzip :: Test
-tzip = "zip" ~: assertFailure "testcase(s) for zip"
+tzip = "zip" ~:
+  TestList[ zip [1,2] [True] ~?= [(1,True)],
+            zip [1,2] [True, False] ~?= [(1,True), (2, False)],
+            zip ([] :: [Int]) [True] ~?= [],
+            zip [1, 2] [3, 4] ~?= [(1, 3), (2, 4)]]
 
 -- transpose  (WARNING: this one is tricky!)
 
@@ -227,7 +246,19 @@ tzip = "zip" ~: assertFailure "testcase(s) for zip"
 --
 -- transpose is defined in Data.List
 
--- transpose :: [[a]] -> [[a]]
+--transpose :: [[a]] -> [[a]]
+transpose lst = transposeAux lst [] where
+  -- transposeAux lst =
+  --   case lst of
+  --     (x : xs) : rest -> [x] : transposeAux xs
+  --     _ -> []
+ transposeAux lst acc =
+   case lst of
+     [x] : rest -> x : transposeAux rest acc
+     (x : xs) : rest -> x : transposeAux (xs : rest) acc
+     _ -> []
+
+
 -- transpose lst =
 --   case lst of
 --     x1 : x2 : xs ->
@@ -245,25 +276,19 @@ ttranspose = "transpose" ~: assertFailure "testcase for transpose"
 -- NOTE: remember you cannot use any functions from the Prelude or Data.List for
 -- this problem, even for use as a helper function.
 
-
--- concat :: [[a]] -> [a]
--- concat = concatAux lst [] where
---   concatAux [] _ = []                   -- Stop when at end of outer lists
---   concatAux (x : xs) acc =
---     case x of
---       elt : elts -> concatAux (elts : xs) (acc : x)
---       _ -> concatAux xs acc               -- Move to next inner list
-
--- concat lst =
---   case lst of
---     x : xs -> case x of
---                 elt : elts -> elt : concat [elts]
---                 _ -> x
---     _ -> []
+concat :: [[a]] -> [a]
+concat lst =
+  case lst of
+    [x] : rest -> x : concat rest
+    (x : xs) : rest -> x : concat (xs : rest)
+    _ -> []
 
 tconcat :: Test
-tconcat = "concat" ~: assertFailure "testcase for concat"
-
+tconcat = "concat" ~:
+  TestList[ concat [[1, 2, 3], [4, 5, 6], [7, 8, 9]] ~?= [1, 2, 3, 4, 5, 6, 7, 8, 9],
+            concat [[1, 2], [3, 4, 5]] ~?= [1, 2, 3, 4, 5],
+            concat [[1]] ~?= [1],
+            concat [([] :: [Int])] ~?= []]
 -- mapMaybe
 
 -- Map a partial function over all the elements of the list
@@ -274,15 +299,23 @@ root :: Double -> Maybe Double
 root d = if d < 0.0 then Nothing else Just $ sqrt d
 
 mapMaybe :: (a -> Maybe a) -> [a] -> [a]
+-- mapMaybe f (x : xs) =
+--   case (x : xs, f x) of
+--     (_, Just val) -> val : mapMaybe f xs
+--     (_, Nothing) -> mapMaybe f xs
+--     _ -> []
+
 mapMaybe f lst =
   case lst of
-    x : xs -> case f x of
-                Just val -> val : mapMaybe f xs
-                Nothing -> mapMaybe f xs
+    x : xs -> if f x  == Nothing then mapMaybe f xs else f x : Map
+              --case f x of
+              --  Just val -> val : mapMaybe f xs
+              --  Nothing -> mapMaybe f xs
     _ -> []
 
 tmapMaybe :: Test
-tmapMaybe = "mapMaybe" ~: assertFailure "testcase for mapMaybe"
+tmapMaybe = "mapMaybe" ~:
+  TestList[ mapMaybe]
 
 -- countSub sub str
 
