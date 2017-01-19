@@ -2,6 +2,7 @@
 
 {-# OPTIONS -fdefer-type-errors  #-}
 
+
 module Main where
 import Prelude hiding (takeWhile, all, zip, reverse, concat)
 import Test.HUnit
