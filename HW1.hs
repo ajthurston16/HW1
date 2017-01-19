@@ -245,17 +245,33 @@ tzip = "zip" ~:
 --
 -- transpose is defined in Data.List
 
+transpose :: [[a]] -> [[a]] 
+transpose lst = transposeAux [] lst
+
+transposeAux :: [[a]] -> [[a]] -> [[a]]
+transposeAux sol lst =
+  case transposeSplit [] [] lst of
+    (x, rest) -> transposeAux x:sol xs
+    (_, []) -> []
+
+
+transposeSplit :: [a] -> [[a]] -> [[a]] -> ([a], [[a]])
+transposeSplit first tail lst = 
+  case lst of
+    (x : xs) : rest ->  : transposeSplit first:[x] xs:tail rest
+    _ -> []
+
 --transpose :: [[a]] -> [[a]]
-transpose lst = transposeAux lst [] where
+--transpose lst = transposeAux lst [] where
   -- transposeAux lst =
   --   case lst of
   --     (x : xs) : rest -> [x] : transposeAux xs
   --     _ -> []
- transposeAux lst acc =
-   case lst of
-     [x] : rest -> x : transposeAux rest acc
-     (x : xs) : rest -> x : transposeAux (xs : rest) acc
-     _ -> []
+ --transposeAux lst acc =
+ --  case lst of
+ --    [x] : rest -> x : transposeAux rest acc
+ --    (x : xs) : rest -> x : transposeAux (xs : rest) acc
+ --    _ -> []
 
 
 -- transpose lst =
