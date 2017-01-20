@@ -423,19 +423,6 @@ isSpace ' ' = True
 isSpace  _  = False
 
 
---splitBy :: (a -> Bool) -> [a] -> [[a]]
---splitBy pred lst = splitByAux pred lst [] where
-    -- splitByAux pre lst acc =
-    --   case lst of
-    --     x : xs -> if pre x then acc : splitByAux pre xs []
-    --               else splitByAux pre xs x : acc
-    --     _ ->      acc
-
-     -- splitByAux pred [] sub = sub
-     -- splitByAux pred (x : xs) sub
-     --   | pred x = if sub == [] then splitByAux pred xs [] else sub : splitByAux pred xs []
-     --   | otherwise = splitByAux pred xs sub : x
-
 buildSubStr :: (a -> Bool) -> [a] -> ([a] , [a])
 buildSubStr _ [] = ([], [])
 buildSubStr pred (x : xs) = if pred x then ([], xs) else (x : res1 , res2) where
@@ -447,11 +434,9 @@ splitBy pred lst =
   case buildSubStr pred lst of
     ([], []) -> []
     (finishedSub, remainingInput) -> finishedSub : splitBy pred remainingInput
+    -- TODO: This needs to do better for edge cases like " Four"
+    -- (appends whitespace as an empty substr)
 
---   splitByAux pred [] _ = []
---   splitByAux pred (x : xs) acc
---      | pred x = acc : splitByAux pred xs []
---      | otherwise = splitByAux pred xs (acc : [x])
 
 tsplitBy :: Test
 tsplitBy = "splitBy" ~: assertFailure "testcase for splitBy"
