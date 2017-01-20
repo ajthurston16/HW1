@@ -424,16 +424,29 @@ isSpace  _  = False
 
 
 --splitBy :: (a -> Bool) -> [a] -> [[a]]
-splitBy pre lst = splitByAux pre lst [] where
+--splitBy pred lst = splitByAux pred lst [] where
     -- splitByAux pre lst acc =
     --   case lst of
     --     x : xs -> if pre x then acc : splitByAux pre xs []
     --               else splitByAux pre xs x : acc
     --     _ ->      acc
 
-     splitByAux pre (x : xs) sub
-       | pre x = sub : splitByAux pre xs []
-       | otherwise = splitByAux pre xs x:sub
+     -- splitByAux pred [] sub = sub
+     -- splitByAux pred (x : xs) sub
+     --   | pred x = if sub == [] then splitByAux pred xs [] else sub : splitByAux pred xs []
+     --   | otherwise = splitByAux pred xs sub : x
+
+buildSubStr :: (a -> Bool) -> [a] -> ([a] , [a])
+buildSubStr _ [] = ([], [])
+buildSubStr pred (x : xs) = if pred x then ([], xs) else (x : res1 , res2) where
+  (res1 , res2) = buildSubStr pred xs
+
+
+splitBy :: (a -> Bool) -> [a] -> [[a]]
+splitBy pred lst =
+  case buildSubStr pred lst of
+    ([], []) -> []
+    (finishedSub, remainingInput) -> finishedSub : splitBy pred remainingInput
 
 --   splitByAux pred [] _ = []
 --   splitByAux pred (x : xs) acc
