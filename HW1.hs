@@ -433,9 +433,8 @@ splitBy :: (a -> Bool) -> [a] -> [[a]]
 splitBy pred lst =
   case buildSubStr pred lst of
     ([], []) -> []
+    ([], remainingInput) -> splitBy pred remainingInput
     (finishedSub, remainingInput) -> finishedSub : splitBy pred remainingInput
-    -- TODO: This needs to do better for edge cases like " Four"
-    -- (appends whitespace as an empty substr)
 
 
 tsplitBy :: Test
