@@ -1,6 +1,6 @@
 {-# OPTIONS -fwarn-incomplete-patterns -fwarn-tabs #-}
 
-{-# OPTIONS -fdefer-type-errors  #-}
+{-# OPTIONS -fdefer-type-errors -Werror #-}
 
 module Main where
 import Prelude hiding (takeWhile, all, zip, reverse, concat)
@@ -245,7 +245,7 @@ transpose lst =
     (x, xs) -> if checkSize xs then x : transpose xs else [x]
 
 transposeAux :: [[a]] -> ([a], [[a]])
-transposeAux ((x : xs) : rest) = (x : res1, xs : res2) 
+transposeAux ((x : xs) : rest) = (x : res1, xs : res2)
               where (res1, res2) = transposeAux rest
 transposeAux _ = ([], [])
 
@@ -258,11 +258,11 @@ checkSize lst =
 
 ttranspose :: Test
 ttranspose = "transpose" ~:
-  TestList[ transpose [[1, 2, 3], 
-                       [4, 5, 6], 
-                       [7, 8, 9]] ~?= 
-                      [[1, 4, 7], 
-                       [2, 5, 8], 
+  TestList[ transpose [[1, 2, 3],
+                       [4, 5, 6],
+                       [7, 8, 9]] ~?=
+                      [[1, 4, 7],
+                       [2, 5, 8],
                        [3, 6, 9]],
             transpose [[1, 2, 3], [4, 5]] ~?= [[1, 4], [2, 5]],
             transpose [[1, 2], [3, 4, 5]] ~?= [[1, 3], [2, 4]],
@@ -331,7 +331,7 @@ countSub sub (x : xs)
 strSlice :: String -> Int -> String
 strSlice [] _ = []
 strSlice (x : xs) i
-    | i == 0 = [] 
+    | i == 0 = []
     | otherwise = x : strSlice xs (i - 1)
 
 strLen :: String -> Int
@@ -362,8 +362,8 @@ isSpace  _  = False
 
 buildSubStr :: (a -> Bool) -> [a] -> ([a] , [a])
 buildSubStr _ [] = ([], [])
-buildSubStr pred (x : xs) 
-    | pred x = ([], xs) 
+buildSubStr pred (x : xs)
+    | pred x = ([], xs)
     | otherwise = (x : res1 , res2) where (res1 , res2) = buildSubStr pred xs
 
 splitBy :: (a -> Bool) -> [a] -> [[a]]
@@ -399,9 +399,9 @@ getMinWeather sol minSoFar ((rowNum, hi, lo) : rest)
 
 getColWeather :: [String] -> [(String, Int, Int)]
 getColWeather (x : xs)
-    | isValidNum hi && isValidNum lo = (day, readInt hi, 
+    | isValidNum hi && isValidNum lo = (day, readInt hi,
                                         readInt lo) : getColWeather xs
-    | otherwise = getColWeather xs 
+    | otherwise = getColWeather xs
       where day : hi : lo : rest = splitBy isSpace x
 getColWeather _ = []
 
@@ -431,9 +431,9 @@ soccer str = getMinSoc " " 1000 (getColSoc (dropElemsSoc [22,18,0] (lines str)))
 dropElemsSoc :: [Int] -> [a] -> [a]
 dropElemsSoc _ [] = []
 dropElemsSoc [] lst = lst
-dropElemsSoc (n : ns) lst 
+dropElemsSoc (n : ns) lst
     | n >= length lst = dropElemsSoc ns lst
-    | otherwise = let (front, x : back) = splitAt n lst in 
+    | otherwise = let (front, x : back) = splitAt n lst in
                   dropElemsSoc ns (front ++ back)
 
 getMinSoc :: String -> Int -> [(String, Int, Int)] -> String
@@ -445,10 +445,10 @@ getMinSoc sol minSoFar ((rowNum, hi, lo) : rest)
 getColSoc :: [String] -> [(String, Int, Int)]
 getColSoc [] = []
 getColSoc (x : xs)
-    | isValidNum hi && isValidNum lo = (day, readInt hi, 
+    | isValidNum hi && isValidNum lo = (day, readInt hi,
                                         readInt lo) : getColSoc xs
-    | otherwise = getColSoc xs 
-      where day : hi : lo : rest = dropElemsSoc [9,7,5,4,3,2,0] (splitBy 
+    | otherwise = getColSoc xs
+      where day : hi : lo : rest = dropElemsSoc [9,7,5,4,3,2,0] (splitBy
                                                                  isSpace x)
 
 soccerProgram :: IO ()
@@ -475,16 +475,16 @@ dropElems _ [] = []
 dropElems [] lst = lst
 dropElems (n : ns) lst
     | n >= length lst = dropElems ns lst
-    | otherwise = let (front, x: back) = splitAt n lst in 
+    | otherwise = let (front, x: back) = splitAt n lst in
                   dropElems ns (front ++ back)
 
 getCol :: [Int] -> [String] -> [(String, Int, Int)]
 getCol _ [] = []
 getCol dropLst (x : xs)
-    | isValidNum firstInt && isValidNum secondInt = (name, readInt firstInt, 
+    | isValidNum firstInt && isValidNum secondInt = (name, readInt firstInt,
                                         readInt secondInt) : getCol dropLst xs
     | otherwise =  getCol dropLst xs
-      where name : firstInt : secondInt : _ = dropElems dropLst (splitBy 
+      where name : firstInt : secondInt : _ = dropElems dropLst (splitBy
                                                                  isSpace x)
 
 getMin :: String -> Int -> [(String, Int, Int)] -> String
@@ -523,20 +523,28 @@ shortAnswer1 = "Our original solutions depended removing irrelevant rows and \
 shortAnswer2 :: String
 shortAnswer2 = "Yes. Our basic approach for the first problem was to split \
                \the original string into lines, then split these lines into \
-               \columns.  For the weather program, we could then keep the first \
-               \three (adjacent) columns and derive the solution from those. \
-               \We wished to apply the same process to the second program, \
-               \though we found that it became more difficult to parse lines \
-               \when the appropriate columns were no longer adjacent and at \
-               \the beginning of each line.  We found ourselves parsing a \
-               \more complicated file format so that our other helper functions \
-               \from the first program would also work in the second."
+               \columns.  For the weather program, we could then keep the \
+               \first three (adjacent) columns and derive the solution from \
+               \those. We wished to apply the same process to the second \
+               \program, though we found that it became more difficult to \
+               \parse lines when the appropriate columns were no longer \
+               \adjacent and at the beginning of each line.  We found \
+               \ourselves parsing a more complicated file format so that our \
+               \other helper functions from the first program would also work \
+               \in the second."
 
 -- Is factoring out as much common code as possible always a good thing? Did the
 -- readability of the programs suffer because of this requirement? How about the
 -- maintainability?
 
 shortAnswer3 :: String
-shortAnswer3 = "Fill in your answer here"
+shortAnswer3 = "It is probably not always a good thing, and the readability \
+                \did suffer somewhat.  Our original soccer program managed to \
+                \drop unnecessary rows and columns in a concise manner with \
+                \simple pattern matches, but the refactored version required a \
+                \less concise series of function calls. The refactored \
+                \version may ultimately be more maintainable, however, since \
+                \it can be extended to a wider range of file formats that \
+                \could appear in the future"
 
 
