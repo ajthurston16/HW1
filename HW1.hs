@@ -438,14 +438,49 @@ splitBy pred lst =
 
 
 tsplitBy :: Test
-tsplitBy = "splitBy" ~: assertFailure "testcase for splitBy"
+tsplitBy = "splitBy" ~:
+  TestList[splitBy isSpace "Four score and seven years" ~?= ["Four", "score",
+                           "and", "seven", "years"],
+           splitBy isSpace "" ~?= ([] :: [[Char]]),
+           splitBy isSpace "    " ~?= ([] :: [[Char]]),
+           splitBy isSpace " Four     score and seven years" ~?=
+                          ["Four", "score", "and", "seven", "years"]
+          ]
 
 --------------------------------------------------------------------------------
 
 -- Part One: Weather Data
 
 weather :: String -> String
-weather str = error "unimplemented"
+weather str = getMin " " 1000 (getCol (drop 2 (lines str)))
+
+getMin :: String -> Int -> [(String, Int, Int)] -> String
+getMin sol _ [] = sol
+getMin sol minSoFar ((rowNum, hi, lo) : rest) =
+  if hi - lo < minSoFar then getMin rowNum (hi - lo) rest
+  else getMin sol minSoFar rest
+
+getCol :: [String] -> [(String, Int, Int)]
+getCol (x : xs) =
+  if (isValidNum hi && isValidNum lo)
+    then (day, readInt hi, readInt lo) : getCol xs
+  else getCol xs
+  where day : hi : lo : rest = splitBy isSpace x
+getCol _ = []
+
+isValidNum :: [Char] -> Bool
+isValidNum [] = True
+isValidNum (x : xs) = Char.isDigit(x) && isValidNum xs
+
+-- This function drops the elements in sequential order. Since it uses the
+-- splitAt function, once it drops an element, the indexing will change
+-- The easiest solution is to provide the elements to be dropped in descending
+-- order.
+dropElems :: [Int] -> [a] -> [a]
+dropElems [] lst = lst
+dropElems (n: ns) lst =
+  let (front, back) = splitAt n lst in
+  dropElems ns (front ++ (tail back))
 
 
 weatherProgram :: IO ()
@@ -458,7 +493,7 @@ readInt = read
 
 testWeather :: Test
 testWeather = "weather" ~: do str <- readFile "weather.dat"
-                              weather str @?= "9"
+                              weather str @?= "14"
 
 --------
 
