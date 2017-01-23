@@ -248,37 +248,26 @@ tzip = "zip" ~:
 -- let (x, xs) = transposeSplit lst in... x :
 
 transpose :: [[a]] -> [[a]]
+transpose [[]] = [[]]
 transpose lst =
   case transposeAux lst of
     (_, []) -> []
-    (x, xs) -> x : transpose xs
-
--- transHead :: [(a, [a])] -> [a]
--- transHead lst =
---   case lst of
---     (x, xs) : rest -> x : transHead rest
-
--- transTail :: [(a, [a])] -> [a]
--- transTail lst =
---   case lst of
---     (x, xs) : rest -> xs : transTail rest
+    (x, xs) -> if checkSize xs then x : transpose xs else [x]
 
 
-transposeAux :: [[a]] -> ([a], [[a]])
 transposeAux lst =
-  (transHead lst, transTail lst)
-
-transHead :: [[a]] -> [a]
-transHead lst =
   case lst of
-    (x : xs) : rest -> x : transHead rest
-    _ -> []
+    (x : xs) : rest -> (x : res1, xs : res2) where (res1, res2) = transposeAux rest
+    _ -> ([], [])
 
-transTail :: [[a]] -> [[a]]
-transTail lst =
-  case lst of
-    (x : xs) : rest -> xs : transTail rest
-    _ -> []
+checkSize :: [[a]] -> Bool
+checkSize [] = True
+checkSize ([] : xs) = False
+checkSize (x : xs) = checkSize xs
+
+-- checkSize :: [a] -> [[a]] -> Bool
+
+-- checkSize transposed rest = length transposed == length rest
 
 
 
@@ -345,7 +334,8 @@ concat lst =
 
 tconcat :: Test
 tconcat = "concat" ~:
-  TestList[ concat [[1, 2, 3], [4, 5, 6], [7, 8, 9]] ~?= [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  TestList[ concat [[1, 2, 3], [4, 5, 6], [7, 8, 9]] ~?= [1, 2, 3, 4, 5, 6, 7,
+                     8, 9],
             concat [[1, 2], [3, 4, 5]] ~?= [1, 2, 3, 4, 5],
             concat [[1]] ~?= [1],
             concat [([] :: [Int])] ~?= []]
@@ -526,13 +516,30 @@ soccer2 = undefined
 -- To what extent did the design decisions you made when writing the original
 -- programs make it easier or harder to factor out common code?
 
-shortAnswer1 :: String
-shortAnswer1 = "Fill in your answer here"
+-- shortAnswer1 :: String
+-- shortAnswer1 = "Our original solutions depended removing irrelevant rows and columns to find the data needed to calculate the solution.
+--                 Most of this parsing was contained within a single helper
+--                 function, while the actual calculation of the solution was
+--                 done in another.  This design choice helped when we were
+--                 refactoring, since only the parsing function needed
+--                 serious changes to accomodate different file formats.
+--                 Although implementing this shared function was somewhat
+--                 difficult, it was good that this was the only major
+--                 optimization needed."
 
--- Was the way you wrote the second program influenced by writing the first?
+-- -- Was the way you wrote the second program influenced by writing the first?
 
-shortAnswer2 :: String
-shortAnswer2 = "Fill in your answer here"
+-- shortAnswer2 :: String
+-- shortAnswer2 = "Yes. Our basic approach for the first problem was to split
+--                 the original string into lines, then split these lines into
+--                 columns.  For the weather program, we could then keep the first
+--                 three (adjacent) columns and derive the solution from those.
+--                 We wished to apply the same process to the second program,
+--                 though we found that it became more difficult to parse lines
+--                 when the appropriate columns were no longer adjacent and at
+--                 the beginning of each line.  We found ourselves parsing a
+--                 more complicated file format so that our other helper functions
+--                 from the first program would also work in the second."
 
 -- Is factoring out as much common code as possible always a good thing? Did the
 -- readability of the programs suffer because of this requirement? How about the
