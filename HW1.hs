@@ -1,3 +1,7 @@
+-- Authors: Guillermo Gutierrez, Alex Thurston
+-- CIS 552 HW1
+-- Date Due: 23 January 2017
+
 {-# OPTIONS -fwarn-incomplete-patterns -fwarn-tabs #-}
 
 {-# OPTIONS -fdefer-type-errors -Werror #-}
@@ -244,10 +248,16 @@ transpose lst =
     (_, []) -> []
     (x, xs) -> if checkSize xs then x : transpose xs else [x]
 
+
+-- | Zip the heads and tails of each inner list into separate lists
+
 transposeAux :: [[a]] -> ([a], [[a]])
 transposeAux ((x : xs) : rest) = (x : res1, xs : res2)
               where (res1, res2) = transposeAux rest
 transposeAux _ = ([], [])
+
+
+-- | Return false if any inner list is empty
 
 checkSize :: [[a]] -> Bool
 checkSize lst =
@@ -328,11 +338,17 @@ countSub sub (x : xs)
     | strSlice (x : xs) (strLen sub) == sub = countSub sub xs + 1
     | otherwise = countSub sub xs
 
+
+-- | Return the first i chars from a nonempty string
+
 strSlice :: String -> Int -> String
 strSlice [] _ = []
 strSlice (x : xs) i
     | i == 0 = []
     | otherwise = x : strSlice xs (i - 1)
+
+
+-- | Get the length of a string
 
 strLen :: String -> Int
 strLen [] = 0
@@ -359,6 +375,9 @@ tcountSub = "countSub" ~:
 isSpace :: Char -> Bool
 isSpace ' ' = True
 isSpace  _  = False
+
+
+-- | Split a list into two lists at the point where the predicate is true
 
 buildSubStr :: (a -> Bool) -> [a] -> ([a] , [a])
 buildSubStr _ [] = ([], [])
@@ -391,11 +410,18 @@ tsplitBy = "splitBy" ~:
 weather :: String -> String
 weather str = getMinWeather " " 1000 (getColWeather (drop 2 (lines str)))
 
+
+-- | Return a string corresponding to the tuple with the minimum difference
+
 getMinWeather :: String -> Int -> [(String, Int, Int)] -> String
 getMinWeather sol _ [] = sol
 getMinWeather sol minSoFar ((rowNum, hi, lo) : rest)
     | hi - lo < minSoFar = getMinWeather rowNum (hi - lo) rest
     | otherwise = getMinWeather sol minSoFar rest
+
+
+
+-- | Read two valid numbers from each line of text and construct a tuple
 
 getColWeather :: [String] -> [(String, Int, Int)]
 getColWeather (x : xs)
@@ -424,10 +450,12 @@ testWeather = "weather" ~: do str <- readFile "weather.dat"
 soccer :: String -> String
 soccer str = getMinSoc " " 1000 (getColSoc (dropElemsSoc [22,18,0] (lines str)))
 
--- This function drops the elements in sequential order. Since it uses the
--- splitAt function, once it drops an element, the indexing will change
--- The easiest solution is to provide the elements to be dropped in descending
--- order.
+
+-- | This function drops the elements in sequential order. Since it uses the
+--   splitAt function, once it drops an element, the indexing will change
+--   The easiest solution is to provide the elements to be dropped in descending
+--   order.
+
 dropElemsSoc :: [Int] -> [a] -> [a]
 dropElemsSoc _ [] = []
 dropElemsSoc [] lst = lst
@@ -436,11 +464,17 @@ dropElemsSoc (n : ns) lst
     | otherwise = let (front, x : back) = splitAt n lst in
                   dropElemsSoc ns (front ++ back)
 
+
+-- | Return a string corresponding to the tuple with the absolute minimum diff
+
 getMinSoc :: String -> Int -> [(String, Int, Int)] -> String
 getMinSoc sol _ [] = sol
 getMinSoc sol minSoFar ((rowNum, hi, lo) : rest)
     | abs(hi - lo) < minSoFar = getMinSoc rowNum (abs(hi - lo)) rest
     | otherwise = getMinSoc sol minSoFar rest
+
+
+-- | Read two valid numbers from each line of text and construct a tuple
 
 getColSoc :: [String] -> [(String, Int, Int)]
 getColSoc [] = []
@@ -466,10 +500,12 @@ testSoccer = "soccer" ~: do
 isValidNum :: String -> Bool
 isValidNum = foldr ((&&) . Char.isDigit) True
 
--- This function drops the elements in sequential order. Since it uses the
--- splitAt function, once it drops an element, the indexing will change
--- The easiest solution is to provide the elements to be dropped in descending
--- order.
+
+-- | This function drops the elements in sequential order. Since it uses the
+--   splitAt function, once it drops an element, the indexing will change
+--   The easiest solution is to provide the elements to be dropped in descending
+--   order.
+
 dropElems :: [Int] -> [a] -> [a]
 dropElems _ [] = []
 dropElems [] lst = lst
@@ -477,6 +513,9 @@ dropElems (n : ns) lst
     | n >= length lst = dropElems ns lst
     | otherwise = let (front, x: back) = splitAt n lst in
                   dropElems ns (front ++ back)
+
+
+-- | Read two valid numbers from each line of text and construct a tuple
 
 getCol :: [Int] -> [String] -> [(String, Int, Int)]
 getCol _ [] = []
@@ -487,6 +526,9 @@ getCol dropLst (x : xs)
       where name : firstInt : secondInt : _ = dropElems dropLst (splitBy
                                                                  isSpace x)
 
+
+-- | Return a string corresponding to the tuple with the absolute minimum diff
+
 getMin :: String -> Int -> [(String, Int, Int)] -> String
 getMin sol _ [] = sol
 getMin sol minSoFar ((name, firstInt, secondInt) : rest)
@@ -494,8 +536,10 @@ getMin sol minSoFar ((name, firstInt, secondInt) : rest)
                                               firstInt - secondInt)) rest
     | otherwise = getMin sol minSoFar rest
 
+
 weather2 :: String -> String
 weather2 str = getMin " " 1000 (getCol [] (dropElems [1,0] (lines str)))
+
 
 soccer2 :: String -> String
 soccer2 str = getMin " " 1000 (getCol [9,7,5,4,3,2,0] (
