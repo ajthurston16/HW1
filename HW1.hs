@@ -248,37 +248,27 @@ tzip = "zip" ~:
 -- let (x, xs) = transposeSplit lst in... x :
 
 transpose :: [[a]] -> [[a]]
+transpose [[]] = [[]]
 transpose lst =
-  case transposeAux lst of
+  case transposeAux lst [] [] of
     (_, []) -> []
     (x, xs) -> x : transpose xs
 
--- transHead :: [(a, [a])] -> [a]
+-- transposeAux :: [[a]] -> ([a], [[a]])
+-- transposeAux lst =
+--   (transHead lst, transTail lst)
+
+-- transHead :: [[a]] -> [a]
 -- transHead lst =
 --   case lst of
---     (x, xs) : rest -> x : transHead rest
+--     (x : xs) : rest -> x : transHead rest
+--     _ -> []
 
--- transTail :: [(a, [a])] -> [a]
+-- transTail :: [[a]] -> [[a]]
 -- transTail lst =
 --   case lst of
---     (x, xs) : rest -> xs : transTail rest
-
-
-transposeAux :: [[a]] -> ([a], [[a]])
-transposeAux lst =
-  (transHead lst, transTail lst)
-
-transHead :: [[a]] -> [a]
-transHead lst =
-  case lst of
-    (x : xs) : rest -> x : transHead rest
-    _ -> []
-
-transTail :: [[a]] -> [[a]]
-transTail lst =
-  case lst of
-    (x : xs) : rest -> xs : transTail rest
-    _ -> []
+--     (x : xs) : rest -> xs : transTail rest
+--     _ -> []
 
 
 
@@ -452,36 +442,21 @@ tsplitBy = "splitBy" ~:
 -- Part One: Weather Data
 
 weather :: String -> String
-weather str = getMin " " 1000 (getCol (drop 2 (lines str)))
+weather str = getMinWeather " " 1000 (getColWeather (drop 2 (lines str)))
 
-getMin :: String -> Int -> [(String, Int, Int)] -> String
-getMin sol _ [] = sol
-getMin sol minSoFar ((rowNum, hi, lo) : rest) =
-  if hi - lo < minSoFar then getMin rowNum (hi - lo) rest
-  else getMin sol minSoFar rest
+getMinWeather :: String -> Int -> [(String, Int, Int)] -> String
+getMinWeather sol _ [] = sol
+getMinWeather sol minSoFar ((rowNum, hi, lo) : rest) =
+  if hi - lo < minSoFar then getMinWeather rowNum (hi - lo) rest
+  else getMinWeather sol minSoFar rest
 
-getCol :: [String] -> [(String, Int, Int)]
-getCol (x : xs) =
+getColWeather :: [String] -> [(String, Int, Int)]
+getColWeather (x : xs) =
   if (isValidNum hi && isValidNum lo)
-    then (day, readInt hi, readInt lo) : getCol xs
-  else getCol xs
+    then (day, readInt hi, readInt lo) : getColWeather xs
+  else getColWeather xs
   where day : hi : lo : rest = splitBy isSpace x
-getCol _ = []
-
-isValidNum :: [Char] -> Bool
-isValidNum [] = True
-isValidNum (x : xs) = Char.isDigit(x) && isValidNum xs
-
--- This function drops the elements in sequential order. Since it uses the
--- splitAt function, once it drops an element, the indexing will change
--- The easiest solution is to provide the elements to be dropped in descending
--- order.
-dropElems :: [Int] -> [a] -> [a]
-dropElems [] lst = lst
-dropElems (n: ns) lst =
-  let (front, back) = splitAt n lst in
-  dropElems ns (front ++ (tail back))
-
+getColWeather _ = []
 
 weatherProgram :: IO ()
 weatherProgram = do
@@ -500,8 +475,35 @@ testWeather = "weather" ~: do str <- readFile "weather.dat"
 -- Part Two: Soccer League Table
 
 soccer :: String -> String
-soccer = error "unimplemented"
+soccer str = getMinSoc " " 1000 (getColSoc (dropElemsSoc [22,18,0] (lines str)))
 
+-- This function drops the elements in sequential order. Since it uses the
+-- splitAt function, once it drops an element, the indexing will change
+-- The easiest solution is to provide the elements to be dropped in descending
+-- order.
+dropElemsSoc :: [Int] -> [a] -> [a]
+dropElemsSoc _ [] = []
+dropElemsSoc [] lst = lst
+dropElemsSoc (n : ns) lst =
+  if n >= length lst 
+    then dropElemsSoc ns lst
+  else
+    let (front, x : back) = splitAt n lst in 
+    dropElemsSoc ns (front ++ back)
+
+getMinSoc :: String -> Int -> [(String, Int, Int)] -> String
+getMinSoc sol _ [] = sol
+getMinSoc sol minSoFar ((rowNum, hi, lo) : rest) =
+  if abs(hi - lo) < minSoFar then getMinSoc rowNum (abs(hi - lo)) rest
+  else getMinSoc sol minSoFar rest
+
+getColSoc :: [String] -> [(String, Int, Int)]
+getColSoc [] = []
+getColSoc (x : xs) =
+  if (isValidNum hi && isValidNum lo)
+    then (day, readInt hi, readInt lo) : getColSoc xs
+  else getColSoc xs
+  where day : hi : lo : rest = dropElemsSoc [9,7,5,4,3,2,0] (splitBy isSpace x)
 
 soccerProgram :: IO ()
 soccerProgram = do
@@ -511,15 +513,48 @@ soccerProgram = do
 testSoccer :: Test
 testSoccer = "soccer" ~: do
   str <- readFile "football.dat"
-  soccer str @?= "Arsenal"
+  soccer str @?= "Aston_Villa"
 
 -- Part Three: DRY Fusion
 
+isValidNum :: [Char] -> Bool
+isValidNum [] = True
+isValidNum (x : xs) = Char.isDigit(x) && isValidNum xs
+
+-- This function drops the elements in sequential order. Since it uses the
+-- splitAt function, once it drops an element, the indexing will change
+-- The easiest solution is to provide the elements to be dropped in descending
+-- order.
+dropElems :: [Int] -> [a] -> [a]
+dropElems _ [] = []
+dropElems [] lst = lst
+dropElems (n : ns) lst =
+  if n >= length lst 
+    then dropElems ns lst
+  else
+    let (front, x: back) = splitAt n lst in 
+    dropElems ns (front ++ back)
+
+getCol :: [Int] -> [String] -> [(String, Int, Int)]
+getCol _ [] = []
+getCol dropLst (x : xs) =
+  if (isValidNum firstInt && isValidNum secondInt)
+    then (name, readInt firstInt, readInt secondInt) : getCol dropLst xs
+  else getCol dropLst xs
+  where name : firstInt : secondInt : _ = dropElems dropLst (splitBy isSpace x)
+
+getMin :: String -> Int -> [(String, Int, Int)] -> String
+getMin sol _ [] = sol
+getMin sol minSoFar ((name, firstInt, secondInt) : rest) =
+  if abs(firstInt - secondInt) < minSoFar 
+    then getMin name (abs(firstInt - secondInt)) rest
+  else getMin sol minSoFar rest
+
 weather2 :: String -> String
-weather2 = undefined
+weather2 str = getMin " " 1000 (getCol [] (dropElems [1,0] (lines str)))
 
 soccer2 :: String -> String
-soccer2 = undefined
+soccer2 str = getMin " " 1000 (getCol [9,7,5,4,3,2,0] (dropElems [22,18,0] (lines str)))
 
 -- Kata Questions
 
